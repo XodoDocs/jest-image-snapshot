@@ -41,6 +41,7 @@ exports[`toMatchImageSnapshot passes diffImageToSnapshot everything it needs to 
 Object {
   "allowSizeMismatch": false,
   "blur": 0,
+  "currSnapshotsDir": "path/to/__image_snapshots__/__current_output__",
   "comparisonMethod": "pixelmatch",
   "customDiffConfig": Object {},
   "diffDir": "path/to/__image_snapshots__/__diff_output__",
