@@ -448,6 +448,7 @@ describe('toMatchImageSnapshot', () => {
       customSnapshotIdentifier,
       customSnapshotsDir: path.join('path', 'to', 'my-custom-snapshots-dir'),
       customDiffDir: path.join('path', 'to', 'my-custom-diff-dir'),
+      customCurrentSnapshotsDir: path.join('path', 'to', 'my-custom-curr-dir'),
       diffDirection: 'vertical',
       noColors: true,
       failureThreshold: 1,
@@ -464,6 +465,7 @@ describe('toMatchImageSnapshot', () => {
     expect(runDiffImageToSnapshot).toHaveBeenCalledWith({
       allowSizeMismatch: false,
       blur: 1,
+      currSnapshotsDir: 'path/to/my-custom-curr-dir',
       customDiffConfig: {
         perceptual: true,
       },
@@ -509,6 +511,7 @@ describe('toMatchImageSnapshot', () => {
     const customConfig = { perceptual: true };
     const toMatchImageSnapshot = configureToMatchImageSnapshot({
       customDiffConfig: customConfig,
+      customCurrentSnapshotsDir: path.join('path', 'to', 'my-custom-curr-dir'),
       customSnapshotsDir: path.join('path', 'to', 'my-custom-snapshots-dir'),
       customDiffDir: path.join('path', 'to', 'my-custom-diff-dir'),
       noColors: true,
@@ -522,6 +525,7 @@ describe('toMatchImageSnapshot', () => {
     expect(diffImageToSnapshot).toHaveBeenCalledWith({
       allowSizeMismatch: false,
       blur: 0,
+      currSnapshotsDir: path.join('path', 'to', 'my-custom-curr-dir'),
       customDiffConfig: {
         perceptual: true,
       },
