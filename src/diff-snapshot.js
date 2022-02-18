@@ -82,6 +82,56 @@ const defaultPixelmatchDiffConfig = {
  */
 const defaultSSIMDiffConfig = { ssim: 'bezkrovny' };
 
+function writeDiffSnapShot({
+  diffDir,
+  diffOutputPath,
+  diffDirection,
+  baselineImage,
+  diffImage,
+  receivedImage,
+  imageWidth,
+  imageHeight,
+}) {
+  mkdirp.sync(diffDir);
+  const composer = new ImageComposer({
+    direction: diffDirection,
+  });
+
+  composer.addImage(baselineImage, imageWidth, imageHeight);
+  composer.addImage(diffImage, imageWidth, imageHeight);
+  composer.addImage(receivedImage, imageWidth, imageHeight);
+
+  const composerParams = composer.getParams();
+
+  const compositeResultImage = new PNG({
+    width: composerParams.compositeWidth,
+    height: composerParams.compositeHeight,
+  });
+
+  // copy baseline, diff, and received images into composite result image
+  composerParams.images.forEach((image, index) => {
+    PNG.bitblt(
+      image.imageData, compositeResultImage, 0, 0, image.imageWidth, image.imageHeight,
+      composerParams.offsetX * index, composerParams.offsetY * index
+    );
+  });
+  // Set filter type to Paeth to avoid expensive auto scanline filter detection
+  // For more information see https://www.w3.org/TR/PNG-Filters.html
+  const pngBuffer = PNG.sync.write(compositeResultImage, { filterType: 4 });
+  fs.writeFileSync(diffOutputPath, pngBuffer);
+
+  return pngBuffer;
+}
+
+function writeCurrentSnapShot({
+  currSnapshotsDir,
+  currSnapshotOutputPath,
+  receivedImageBuffer,
+}) {
+  mkdirp.sync(currSnapshotsDir);
+  fs.writeFileSync(currSnapshotOutputPath, receivedImageBuffer);
+}
+
 /**
  * Helper function for SSIM comparison that allows us to use the existing diff
  * config that works with jest-image-snapshot to pass parameters
@@ -155,6 +205,7 @@ const shouldUpdate = ({ pass, updateSnapshot, updatePassedSnapshot }) => (
 const shouldFail = ({
   totalPixels,
   diffPixelCount,
+  currSnapshotsDir,
   hasSizeMismatch,
   allowSizeMismatch,
   failureThresholdType,
@@ -210,7 +261,9 @@ function diffImageToSnapshot(options) {
     result = { added: true };
   } else {
     const diffOutputPath = path.join(diffDir, `${snapshotIdentifier}-diff.png`);
+    const currSnapshotOutputPath = path.join(currSnapshotsDir, `${snapshotIdentifier}-current.png`);
     rimraf.sync(diffOutputPath);
+    rimraf.sync(currSnapshotOutputPath);
 
     const defaultDiffConfig = comparisonMethod !== 'ssim' ? defaultPixelmatchDiffConfig : defaultSSIMDiffConfig;
 
@@ -269,39 +322,29 @@ function diffImageToSnapshot(options) {
     });
 
     if (isFailure({ pass, updateSnapshot })) {
-      mkdirp.sync(path.dirname(diffOutputPath));
-      const composer = new ImageComposer({
-        direction: diffDirection,
+      const pngBuffer = writeDiffSnapShot({
+        diffDir,
+        diffOutputPath,
+        diffDirection,
+        baselineImage,
+        diffImage,
+        receivedImage,
+        imageWidth,
+        imageHeight,
       });
 
-      composer.addImage(baselineImage, imageWidth, imageHeight);
-      composer.addImage(diffImage, imageWidth, imageHeight);
-      composer.addImage(receivedImage, imageWidth, imageHeight);
-
-      const composerParams = composer.getParams();
-
-      const compositeResultImage = new PNG({
-        width: composerParams.compositeWidth,
-        height: composerParams.compositeHeight,
+      writeCurrentSnapShot({
+        currSnapshotsDir,
+        currSnapshotOutputPath,
+        receivedImageBuffer,
       });
-
-      // copy baseline, diff, and received images into composite result image
-      composerParams.images.forEach((image, index) => {
-        PNG.bitblt(
-          image.imageData, compositeResultImage, 0, 0, image.imageWidth, image.imageHeight,
-          composerParams.offsetX * index, composerParams.offsetY * index
-        );
-      });
-      // Set filter type to Paeth to avoid expensive auto scanline filter detection
-      // For more information see https://www.w3.org/TR/PNG-Filters.html
-      const pngBuffer = PNG.sync.write(compositeResultImage, { filterType: 4 });
-      fs.writeFileSync(diffOutputPath, pngBuffer);
 
       result = {
         pass: false,
         diffSize,
         imageDimensions,
         diffOutputPath,
+        currSnapshotOutputPath,
         diffRatio,
         diffPixelCount,
         imgSrcString: `data:image/png;base64,${pngBuffer.toString('base64')}`,
