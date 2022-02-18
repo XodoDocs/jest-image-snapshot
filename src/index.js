@@ -136,6 +136,7 @@ function configureToMatchImageSnapshot({
   customSnapshotIdentifier: commonCustomSnapshotIdentifier,
   customSnapshotsDir: commonCustomSnapshotsDir,
   customDiffDir: commonCustomDiffDir,
+  customCurrentSnapshotsDir: commonCustomCurrentSnapshotsDir,
   diffDirection: commonDiffDirection = 'horizontal',
   noColors: commonNoColors,
   failureThreshold: commonFailureThreshold = 0,
@@ -152,6 +153,7 @@ function configureToMatchImageSnapshot({
     customSnapshotIdentifier = commonCustomSnapshotIdentifier,
     customSnapshotsDir = commonCustomSnapshotsDir,
     customDiffDir = commonCustomDiffDir,
+    customCurrentSnapshotsDir = commonCustomCurrentSnapshotsDir,
     diffDirection = commonDiffDirection,
     customDiffConfig = {},
     noColors = commonNoColors,
@@ -190,6 +192,7 @@ function configureToMatchImageSnapshot({
 
     const snapshotsDir = customSnapshotsDir || path.join(path.dirname(testPath), SNAPSHOTS_DIR);
     const diffDir = customDiffDir || path.join(snapshotsDir, '__diff_output__');
+    const currSnapshotsDir = customCurrentSnapshotsDir || path.join(snapshotsDir, '__current_output__');
     const baselineSnapshotPath = path.join(snapshotsDir, `${snapshotIdentifier}-snap.png`);
     OutdatedSnapshotReporter.markTouchedFile(baselineSnapshotPath);
 
@@ -208,6 +211,7 @@ function configureToMatchImageSnapshot({
       imageToSnapshot({
         receivedImageBuffer: received,
         snapshotsDir,
+        currSnapshotsDir,
         diffDir,
         diffDirection,
         snapshotIdentifier,
