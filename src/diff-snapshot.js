@@ -205,7 +205,6 @@ const shouldUpdate = ({ pass, updateSnapshot, updatePassedSnapshot }) => (
 const shouldFail = ({
   totalPixels,
   diffPixelCount,
-  currSnapshotsDir,
   hasSizeMismatch,
   allowSizeMismatch,
   failureThresholdType,
@@ -240,6 +239,7 @@ function diffImageToSnapshot(options) {
     receivedImageBuffer,
     snapshotIdentifier,
     snapshotsDir,
+    currSnapshotsDir,
     diffDir,
     diffDirection,
     updateSnapshot = false,
